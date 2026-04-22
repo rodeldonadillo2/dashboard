@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ACS Burgers — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #F4F6F9;
+  --surface: #FFFFFF;
+  --surface-2: #F9FAFB;
+  --border: #E3E8EF;
+  --border-2: #D1D9E0;
+  --text: #0F1B2D;
+  --text-2: #4A5568;
+  --text-3: #8A96A3;
+  --accent: #0176D3;
+  --accent-light: #EBF4FF;
+  --accent-2: #032D60;
+  --green: #2E844A;
+  --green-light: #EEF6EE;
+  --orange: #DD5A0A;
+  --orange-light: #FEF2E9;
+  --purple: #6B4FBB;
+  --purple-light: #F3F0FB;
+  --red: #C23934;
+  --red-light: #FDECEA;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow: 0 4px 12px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.05);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --sidebar-w: 240px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Instrument Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── LOGIN ── */
+#login-screen {
+  position: fixed; inset: 0;
+  background: linear-gradient(135deg, #032D60 0%, #0176D3 60%, #1CA3EC 100%);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+}
+.login-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 48px 40px;
+  width: 100%; max-width: 400px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+  text-align: center;
+}
+.login-logo {
+  font-family: 'Instrument Serif', serif;
+  font-size: 28px;
+  color: var(--accent-2);
+  margin-bottom: 4px;
+}
+.login-sub {
+  font-size: 13px;
+  color: var(--text-3);
+  margin-bottom: 32px;
+}
+.login-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+  text-align: left;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.login-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid var(--border-2);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-family: 'Instrument Sans', sans-serif;
+  color: var(--text);
+  margin-bottom: 20px;
+  transition: border-color 0.15s;
+}
+.login-input:focus { outline: none; border-color: var(--accent); }
+.login-btn {
+  width: 100%;
+  padding: 13px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'Instrument Sans', sans-serif;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.login-btn:hover { background: #0265b8; transform: translateY(-1px); }
+.login-err { color: var(--red); font-size: 13px; margin-top: 10px; display: none; }
+
+/* ── APP SHELL ── */
+#app { display: none; min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  position: fixed; top: 0; left: 0;
+  width: var(--sidebar-w);
+  height: 100vh;
+  background: var(--accent-2);
+  display: flex; flex-direction: column;
+  z-index: 50;
+  transition: transform 0.25s;
+}
+.sidebar-brand {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.sidebar-brand-name {
+  font-family: 'Instrument Serif', serif;
+  font-size: 20px;
+  color: #fff;
+  margin-bottom: 2px;
+}
+.sidebar-brand-tag {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+.nav-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0 8px;
+  margin: 16px 0 6px;
+}
+.sidebar {
+  overflow-y: auto;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  color: rgba(255,255,255,0.7);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  margin-bottom: 2px;
+}
+.nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.nav-item.active { background: rgba(255,255,255,0.15); color: #fff; }
+.nav-icon { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.8; }
+.sidebar-footer {
+  padding: 16px 12px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+.sidebar-user {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px;
+}
+.sidebar-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff;
+}
+.sidebar-user-info { flex: 1; }
+.sidebar-user-name { font-size: 13px; font-weight: 600; color: #fff; }
+.sidebar-user-role { font-size: 11px; color: rgba(255,255,255,0.5); }
+
+/* ── TOPBAR ── */
+.topbar {
+  position: fixed; top: 0;
+  left: var(--sidebar-w); right: 0;
+  height: 60px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 24px;
+  gap: 16px;
+  z-index: 40;
+  box-shadow: var(--shadow-sm);
+}
+.topbar-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 20px;
+  color: var(--text);
+  flex: 1;
+}
+.topbar-actions { display: flex; align-items: center; gap: 10px; }
+.btn-icon {
+  width: 36px; height: 36px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-2);
+  transition: border-color 0.15s, background 0.15s;
+}
+.btn-icon:hover { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+.btn-refresh {
+  display: flex; align-items: center; gap: 7px;
+  padding: 8px 14px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Instrument Sans', sans-serif;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-refresh:hover { background: #0265b8; }
+.btn-refresh svg { width: 14px; height: 14px; }
+.last-updated { font-size: 12px; color: var(--text-3); }
+
+/* ── MAIN ── */
+.main {
+  margin-left: var(--sidebar-w);
+  padding-top: 60px;
+  min-height: 100vh;
+}
+.main-content { padding: 24px; }
+
+/* ── WIDGET TOOLBAR ── */
+.widget-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.widget-toolbar-left { display: flex; align-items: center; gap: 10px; }
+.toolbar-label { font-size: 13px; color: var(--text-3); }
+.btn-customize {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+  cursor: pointer;
+  font-family: 'Instrument Sans', sans-serif;
+  transition: border-color 0.15s;
+}
+.btn-customize:hover { border-color: var(--accent); color: var(--accent); }
+.btn-customize svg { width: 14px; height: 14px; }
+
+/* ── WIDGET PANEL ── */
+.widget-panel {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+  display: none;
+}
+.widget-panel.open { display: block; }
+.widget-panel-title { font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 12px; }
+.widget-toggles { display: flex; flex-wrap: wrap; gap: 8px; }
+.widget-toggle {
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+  cursor: pointer;
+  background: var(--surface);
+  transition: all 0.15s;
+  user-select: none;
+}
+.widget-toggle.active {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  color: var(--accent);
+}
+.widget-toggle svg { width: 13px; height: 13px; }
+
+/* ── GRID ── */
+.widget-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 16px;
+}
+
+/* ── WIDGET ── */
+.widget {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: box-shadow 0.2s, transform 0.15s, opacity 0.2s;
+  position: relative;
+}
+.widget:hover { box-shadow: var(--shadow); }
+.widget.dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+}
+.widget.drag-over { border-color: var(--accent); background: var(--accent-light); }
+.widget.hidden { display: none; }
+
+.widget-col-3 { grid-column: span 3; }
+.widget-col-4 { grid-column: span 4; }
+.widget-col-6 { grid-column: span 6; }
+.widget-col-8 { grid-column: span 8; }
+.widget-col-12 { grid-column: span 12; }
+
+.widget-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  cursor: grab;
+}
+.widget-header:active { cursor: grabbing; }
+.widget-header-left { display: flex; align-items: center; gap: 8px; }
+.widget-icon {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.widget-title { font-size: 13px; font-weight: 600; color: var(--text-2); }
+.widget-drag-handle {
+  color: var(--text-3);
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.widget:hover .widget-drag-handle { opacity: 1; }
+.widget-body { padding: 20px; }
+
+/* ── STAT WIDGET ── */
+.stat-value {
+  font-family: 'Instrument Serif', serif;
+  font-size: 36px;
+  color: var(--text);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.stat-label { font-size: 12px; color: var(--text-3); margin-bottom: 12px; }
+.stat-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.stat-badge.up { background: var(--green-light); color: var(--green); }
+.stat-badge.neutral { background: var(--accent-light); color: var(--accent); }
+
+/* ── TABLE ── */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1.5px solid var(--border);
+  background: var(--surface-2);
+}
+.data-table td {
+  font-size: 13px;
+  color: var(--text);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(--surface-2); }
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge-blue { background: var(--accent-light); color: var(--accent); }
+.badge-green { background: var(--green-light); color: var(--green); }
+.badge-orange { background: var(--orange-light); color: var(--orange); }
+.badge-purple { background: var(--purple-light); color: var(--purple); }
+
+/* ── PAID BUTTON & TILE ── */
+.btn-mark-paid {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-left: 8px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'Instrument Sans', sans-serif;
+  background: var(--orange);
+  color: #fff;
+  transition: background 0.15s, transform 0.1s;
+  vertical-align: middle;
+  letter-spacing: 0.02em;
+}
+.btn-mark-paid:hover { background: #c24e08; transform: translateY(-1px); }
+.btn-mark-paid svg { width: 10px; height: 10px; }
+
+.paid-tile {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-left: 8px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--green-light);
+  color: var(--green);
+  border: 1.5px solid #b7dfbe;
+  vertical-align: middle;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.paid-tile:hover { background: #d5efd8; }
+
+/* ── LOADING ── */
+.loading-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 48px 20px;
+  color: var(--text-3);
+  gap: 12px;
+}
+.spinner {
+  width: 28px; height: 28px;
+  border: 2.5px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center; padding: 40px 20px; color: var(--text-3);
+}
+.empty-icon { font-size: 32px; margin-bottom: 8px; }
+.empty-text { font-size: 13px; }
+
+/* ── CHART CONTAINER ── */
+.chart-wrap { position: relative; height: 220px; }
+
+/* ── TOP ITEMS ── */
+.top-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.top-item:last-child { border-bottom: none; }
+.top-item-rank {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: var(--text-2);
+  flex-shrink: 0;
+}
+.top-item-rank.gold { background: #FEF9E7; border-color: #F0D98A; color: #9A7D0A; }
+.top-item-name { flex: 1; font-size: 13px; font-weight: 500; color: var(--text); }
+.top-item-bar-wrap { width: 80px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.top-item-bar { height: 100%; border-radius: 3px; background: var(--accent); }
+.top-item-count { font-size: 13px; font-weight: 600; color: var(--text-2); min-width: 28px; text-align: right; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--text);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  z-index: 999;
+  transform: translateY(80px);
+  opacity: 0;
+  transition: transform 0.25s, opacity 0.25s;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  :root { --sidebar-w: 0px; }
+  .sidebar { transform: translateX(-240px); }
+  .sidebar.open { transform: translateX(0); --sidebar-w: 240px; }
+  .topbar { left: 0; }
+  .main { margin-left: 0; }
+  .widget-col-3, .widget-col-4 { grid-column: span 6; }
+  .widget-col-6, .widget-col-8 { grid-column: span 12; }
+  .widget-col-12 { grid-column: span 12; }
+}
+@media (max-width: 560px) {
+  .widget-col-3, .widget-col-4, .widget-col-6 { grid-column: span 12; }
+}
+
+/* ── PRINT ── */
+@media print {
+  .sidebar, .topbar, .widget-toolbar, .widget-panel { display: none !important; }
+  .main { margin-left: 0; padding-top: 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">ACS Burgers</div>
+    <div class="login-sub">Owner Dashboard · Sign in to continue</div>
+    <label class="login-label" for="pw-input">Password</label>
+    <input class="login-input" type="password" id="pw-input" placeholder="Enter your password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="login-btn" onclick="doLogin()">Sign in</button>
+    <div class="login-err" id="login-err">Incorrect password. Try again.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-name">ACS Burgers</div>
+      <div class="sidebar-brand-tag">Owner Dashboard</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <div class="nav-item active" onclick="setPage('overview')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Overview
+      </div>
+      <div class="nav-item" onclick="setPage('orders')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+        All Orders
+      </div>
+      <div class="nav-section-label">Analytics</div>
+      <div class="nav-item" onclick="setPage('items')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+        Items
+      </div>
+      <div class="nav-item" onclick="setPage('revenue')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Revenue
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name">Admin</div>
+          <div class="sidebar-user-role">Owner</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <button class="btn-icon" onclick="toggleSidebar()" style="display:none" id="menu-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="topbar-title" id="page-title">Overview</div>
+    <div class="topbar-actions">
+      <span class="last-updated" id="last-updated-label"></span>
+      <button class="btn-refresh" onclick="loadData()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+        Refresh
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="main-content">
+
+      <!-- WIDGET TOOLBAR -->
+      <div class="widget-toolbar">
+        <div class="widget-toolbar-left">
+          <span class="toolbar-label">Dashboard</span>
+        </div>
+        <button class="btn-customize" onclick="toggleWidgetPanel()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          Customize
+        </button>
+      </div>
+
+      <!-- WIDGET TOGGLE PANEL -->
+      <div class="widget-panel" id="widget-panel">
+        <div class="widget-panel-title">Show / Hide Widgets</div>
+        <div class="widget-toggles" id="widget-toggles"></div>
+      </div>
+
+      <!-- WIDGET GRID -->
+      <div class="widget-grid" id="widget-grid"></div>
+
+    </div>
+  </main>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ──
+const GAS_URL = "https://script.google.com/macros/s/AKfycbym6wPRI4s5gQpOk1LwfIOGoqDPdz4qzko8wqit_c7ELXux2VPXp6MDry5EtcOPBa6PEQ/exec";
+const PASSWORD = "123456"; // ← change this to your preferred password
+
+// ── STATE ──
+let allOrders = [];
+let charts = {};
+let widgetOrder = JSON.parse(localStorage.getItem('acs-widget-order') || 'null');
+let hiddenWidgets = JSON.parse(localStorage.getItem('acs-hidden-widgets') || '[]');
+
+// ── WIDGET DEFINITIONS ──
+const WIDGETS = [
+  { id: 'stat-orders',   label: 'Total Orders',    icon: '📋', col: 3 },
+  { id: 'stat-revenue',  label: 'Total Revenue',   icon: '💰', col: 3 },
+  { id: 'stat-qty',      label: 'Total Items Sold', icon: '🍔', col: 3 },
+  { id: 'stat-avg',      label: 'Avg Order Value',  icon: '📊', col: 3 },
+  { id: 'chart-daily',   label: 'Daily Revenue',    icon: '📈', col: 8 },
+  { id: 'chart-payment', label: 'Payment Methods',  icon: '💳', col: 4 },
+  { id: 'top-items',     label: 'Top Items',        icon: '🏆', col: 4 },
+  { id: 'chart-office',  label: 'Orders by Office', icon: '🏢', col: 4 },
+  { id: 'chart-items',   label: 'Items Breakdown',  icon: '🥩', col: 4 },
+  { id: 'recent-orders', label: 'Recent Orders',    icon: '🕐', col: 12 },
+];
+
+// ── LOGIN ──
+function doLogin() {
+  const pw = document.getElementById('pw-input').value;
+  if (pw === PASSWORD) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initDashboard();
+  } else {
+    document.getElementById('login-err').style.display = 'block';
+    document.getElementById('pw-input').value = '';
+  }
+}
+
+// ── INIT ──
+function initDashboard() {
+  if (window.innerWidth <= 900) {
+    document.getElementById('menu-btn').style.display = 'flex';
+  }
+  buildWidgetGrid();
+  buildWidgetToggles();
+  loadData();
+}
+
+// ── SIDEBAR ──
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ── PAGE NAV ──
+function setPage(page) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  const titles = { overview: 'Overview', orders: 'All Orders', items: 'Items Analytics', revenue: 'Revenue' };
+  document.getElementById('page-title').textContent = titles[page] || 'Dashboard';
+}
+
+// ── WIDGET PANEL ──
+function toggleWidgetPanel() {
+  document.getElementById('widget-panel').classList.toggle('open');
+}
+
+// ── BUILD GRID ──
+function buildWidgetGrid() {
+  const grid = document.getElementById('widget-grid');
+  grid.innerHTML = '';
+  const order = widgetOrder || WIDGETS.map(w => w.id);
+  order.forEach(id => {
+    const def = WIDGETS.find(w => w.id === id);
+    if (!def) return;
+    const el = document.createElement('div');
+    el.className = `widget widget-col-${def.col}${hiddenWidgets.includes(id) ? ' hidden' : ''}`;
+    el.id = `widget-${id}`;
+    el.draggable = true;
+    el.innerHTML = `
+      <div class="widget-header" title="Drag to reorder">
+        <div class="widget-header-left">
+          <div class="widget-icon">${def.icon}</div>
+          <span class="widget-title">${def.label}</span>
+        </div>
+        <svg class="widget-drag-handle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/><circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/></svg>
+      </div>
+      <div class="widget-body" id="body-${id}">
+        <div class="loading-state"><div class="spinner"></div><span>Loading…</span></div>
+      </div>`;
+    // drag events
+    el.addEventListener('dragstart', onDragStart);
+    el.addEventListener('dragover', onDragOver);
+    el.addEventListener('dragleave', onDragLeave);
+    el.addEventListener('drop', onDrop);
+    el.addEventListener('dragend', onDragEnd);
+    grid.appendChild(el);
+  });
+}
+
+// ── BUILD TOGGLES ──
+function buildWidgetToggles() {
+  const wrap = document.getElementById('widget-toggles');
+  wrap.innerHTML = '';
+  WIDGETS.forEach(def => {
+    const active = !hiddenWidgets.includes(def.id);
+    const btn = document.createElement('div');
+    btn.className = `widget-toggle${active ? ' active' : ''}`;
+    btn.id = `toggle-${def.id}`;
+    btn.innerHTML = `
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        ${active ? '<polyline points="20 6 9 17 4 12"/>' : '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'}
+      </svg>
+      ${def.label}`;
+    btn.onclick = () => toggleWidget(def.id);
+    wrap.appendChild(btn);
+  });
+}
+
+function toggleWidget(id) {
+  const widget = document.getElementById(`widget-${id}`);
+  const toggle = document.getElementById(`toggle-${id}`);
+  if (hiddenWidgets.includes(id)) {
+    hiddenWidgets = hiddenWidgets.filter(x => x !== id);
+    widget.classList.remove('hidden');
+    toggle.classList.add('active');
+    toggle.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>${WIDGETS.find(w=>w.id===id).label}`;
+  } else {
+    hiddenWidgets.push(id);
+    widget.classList.add('hidden');
+    toggle.classList.remove('active');
+    toggle.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>${WIDGETS.find(w=>w.id===id).label}`;
+  }
+  localStorage.setItem('acs-hidden-widgets', JSON.stringify(hiddenWidgets));
+}
+
+// ── DRAG & DROP ──
+let dragSrcId = null;
+function onDragStart(e) { dragSrcId = this.id; this.classList.add('dragging'); }
+function onDragOver(e) { e.preventDefault(); this.classList.add('drag-over'); }
+function onDragLeave() { this.classList.remove('drag-over'); }
+function onDragEnd() { document.querySelectorAll('.widget').forEach(w => { w.classList.remove('dragging','drag-over'); }); }
+function onDrop(e) {
+  e.preventDefault();
+  this.classList.remove('drag-over');
+  if (dragSrcId === this.id) return;
+  const grid = document.getElementById('widget-grid');
+  const src = document.getElementById(dragSrcId);
+  const target = this;
+  const children = [...grid.children];
+  const srcIdx = children.indexOf(src);
+  const tgtIdx = children.indexOf(target);
+  if (srcIdx < tgtIdx) grid.insertBefore(src, target.nextSibling);
+  else grid.insertBefore(src, target);
+  // save order
+  widgetOrder = [...grid.children].map(el => el.id.replace('widget-',''));
+  localStorage.setItem('acs-widget-order', JSON.stringify(widgetOrder));
+  showToast('Layout saved');
+}
+
+// ── LOAD DATA ──
+async function loadData() {
+  showToast('Refreshing data…');
+  try {
+    // Use doGet to fetch orders from GAS
+    const res = await fetch(GAS_URL + '?action=getOrders');
+    const json = await res.json();
+    if (json && json.orders) {
+      allOrders = json.orders;
+    } else {
+      // fallback: use demo data for testing
+      allOrders = getDemoData();
+    }
+  } catch(e) {
+    allOrders = getDemoData();
+    showToast('Using demo data (GAS not configured for GET)');
+  }
+
+  renderAll();
+  const now = new Date();
+  document.getElementById('last-updated-label').textContent =
+    `Updated ${now.toLocaleTimeString('en-PH', {hour:'2-digit',minute:'2-digit'})}`;
+}
+async function togglePaid(orderNumber, status) {
+  try {
+    await fetch(GAS_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "updatePaid",
+        orderNumber,
+        paid: status
+      })
+    });
+
+    showToast(status ? "Marked as Paid" : "Marked as Unpaid");
+    loadData();
+  } catch (e) {
+    showToast("Error updating payment");
+  }
+}
+
+// ── DEMO DATA (for testing before GAS GET is set up) ──
+function getDemoData() {
+  const items = ['Jr.','Eggy','Bacon','Jalapeno','DoubleTeam'];
+  const offices = ['Camerino','Guevarra'];
+  const payments = ['GCash','Cash','Sa Sahod na Boss Oma'];
+  const orders = [];
+  for (let i = 0; i < 40; i++) {
+    const item = items[Math.floor(Math.random()*items.length)];
+    const price = {
+  "Jr.": 80,
+  Eggy: 100,
+  Bacon: 115,
+  Jalapeno: 100,
+  DoubleTeam: 115
+}[item];
+    const qty = Math.ceil(Math.random()*3);
+    const addonsP = Math.random() > 0.5 ? 10 : 0;
+    const d = new Date(); d.setDate(d.getDate() - Math.floor(Math.random()*14));
+    orders.push({
+      timestamp: d.toISOString(),
+      orderNumber: 'ACS-'+Math.floor(100000+Math.random()*900000),
+      name: ['Alden','Maria','Jose','Ana','Ramon'][Math.floor(Math.random()*5)],
+      office: offices[Math.floor(Math.random()*2)],
+      item, itemPrice: (price*qty).toFixed(2),
+      addons: addonsP > 0 ? item+': Extra Mayo' : item+': None',
+      addonsPrice: addonsP > 0 ? addonsP.toFixed(2) : 'None',
+      quantity: qty,
+      total: (price*qty + addonsP),
+      payment: payments[Math.floor(Math.random()*3)]
+    });
+  }
+  return orders;
+}
+
+// ── RENDER ALL ──
+function renderAll() {
+  destroyCharts();
+  renderStatOrders();
+  renderStatRevenue();
+  renderStatQty();
+  renderStatAvg();
+  renderChartDaily();
+  renderChartPayment();
+  renderTopItems();
+  renderChartOffice();
+  renderChartItems();
+  renderRecentOrders();
+  renderStatGains();
+}
+
+function destroyCharts() {
+  Object.values(charts).forEach(c => { try { c.destroy(); } catch(e){} });
+  charts = {};
+}
+
+// ── STATS ──
+function renderStatOrders() {
+  document.getElementById('body-stat-orders').innerHTML = `
+    <div class="stat-value">${allOrders.length}</div>
+    <div class="stat-label">Total orders received</div>
+    <span class="stat-badge neutral">All time</span>`;
+}
+function renderStatRevenue() {
+  const total = allOrders.reduce((s,o) => s + parseFloat(o.total||0), 0);
+  document.getElementById('body-stat-revenue').innerHTML = `
+    <div class="stat-value">₱${total.toLocaleString('en-PH',{minimumFractionDigits:0})}</div>
+    <div class="stat-label">Total revenue earned</div>
+    <span class="stat-badge up">↑ All time</span>`;
+}
+function renderStatQty() {
+  const qty = allOrders.reduce((s,o) => s + parseInt(o.quantity||1), 0);
+  document.getElementById('body-stat-qty').innerHTML = `
+    <div class="stat-value">${qty}</div>
+    <div class="stat-label">Total items sold</div>
+    <span class="stat-badge neutral">All time</span>`;
+}
+function renderStatAvg() {
+  const avg = allOrders.length ? allOrders.reduce((s,o)=>s+parseFloat(o.total||0),0)/allOrders.length : 0;
+  document.getElementById('body-stat-avg').innerHTML = `
+    <div class="stat-value">₱${avg.toFixed(0)}</div>
+    <div class="stat-label">Average order value</div>
+    <span class="stat-badge neutral">Per order</span>`;
+}
+function renderStatGains() {
+  let realized = 0;
+  let unrealized = 0;
+
+  allOrders.forEach(o => {
+    if (o.payment === "Sa Sahod na Boss Oma") {
+      if (o.paid) realized += parseFloat(o.total || 0);
+      else unrealized += parseFloat(o.total || 0);
+    } else {
+      realized += parseFloat(o.total || 0);
+    }
+  });
+
+  document.getElementById('body-stat-revenue').innerHTML += `
+    <div style="margin-top:10px;font-size:12px;color:#4A5568">
+      <div>✔ Realized: ₱${realized.toFixed(0)}</div>
+      <div>⏳ Unrealized: ₱${unrealized.toFixed(0)}</div>
+    </div>
+  `;
+}
+
+// ── CHART: DAILY REVENUE ──
+function renderChartDaily() {
+  const map = {};
+  allOrders.forEach(o => {
+  const items = (o.item || '').split(' | ');
+  items.forEach(it => {
+    const match = it.match(/^(.*?)(?:\s*x(\d+))?$/);
+    if (!match) return;
+    const name = match[1].trim();
+    const qty = parseInt(match[2] || '1', 10);
+    if (name) map[name] = (map[name] || 0) + qty;
+  });
+});
+  const sorted = Object.entries(map).sort((a,b)=>new Date(a[0])-new Date(b[0])).slice(-14);
+  const labels = sorted.map(x=>x[0]);
+  const values = sorted.map(x=>x[1]);
+  document.getElementById('body-chart-daily').innerHTML = '<div class="chart-wrap"><canvas id="canvas-daily"></canvas></div>';
+  const ctx = document.getElementById('canvas-daily').getContext('2d');
+  charts.daily = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Revenue (₱)',
+        data: values,
+        borderColor: '#0176D3',
+        backgroundColor: 'rgba(1,118,211,0.08)',
+        borderWidth: 2.5,
+        pointBackgroundColor: '#0176D3',
+        pointRadius: 4,
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#8A96A3' } },
+        y: { grid: { color: '#E3E8EF' }, ticks: { font: { size: 11 }, color: '#8A96A3', callback: v=>'₱'+v } }
+      }
+    }
+  });
+}
+
+// ── CHART: PAYMENT ──
+function renderChartPayment() {
+  const map = {};
+  allOrders.forEach(o => { const p = o.payment||'Unknown'; map[p]=(map[p]||0)+1; });
+  const labels = Object.keys(map);
+  const values = Object.values(map);
+  document.getElementById('body-chart-payment').innerHTML = '<div class="chart-wrap"><canvas id="canvas-payment"></canvas></div>';
+  const ctx = document.getElementById('canvas-payment').getContext('2d');
+  charts.payment = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data: values, backgroundColor: ['#0176D3','#2E844A','#DD5A0A','#6B4FBB'], borderWidth: 0 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 12 } } },
+      cutout: '65%'
+    }
+  });
+}
+
+// ── TOP ITEMS ──
+function renderTopItems() {
+  const map = {};
+  allOrders.forEach(o => {
+    const items = (o.item||'').split(' | ');
+    items.forEach(it => { const n=it.replace(/\s*x\d+/,'').trim(); if(n) map[n]=(map[n]||0)+1; });
+  });
+  const sorted = Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const max = sorted[0]?.[1] || 1;
+  const ranks = ['🥇','🥈','🥉','4','5'];
+  let html = '';
+  sorted.forEach(([name,count],i) => {
+    html += `
+      <div class="top-item">
+        <div class="top-item-rank${i===0?' gold':''}">${i<3?ranks[i]:i+1}</div>
+        <div class="top-item-name">${name}</div>
+        <div class="top-item-bar-wrap"><div class="top-item-bar" style="width:${(count/max*100).toFixed(0)}%"></div></div>
+        <div class="top-item-count">${count}</div>
+      </div>`;
+  });
+  document.getElementById('body-top-items').innerHTML = html || '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No data yet</div></div>';
+}
+
+// ── CHART: OFFICE ──
+function renderChartOffice() {
+  const map = {};
+  allOrders.forEach(o => { const of=o.office||'Unknown'; map[of]=(map[of]||0)+1; });
+  document.getElementById('body-chart-office').innerHTML = '<div class="chart-wrap"><canvas id="canvas-office"></canvas></div>';
+  const ctx = document.getElementById('canvas-office').getContext('2d');
+  charts.office = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(map),
+      datasets: [{ label: 'Orders', data: Object.values(map), backgroundColor: '#0176D3', borderRadius: 6, borderSkipped: false }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#8A96A3' } },
+        y: { grid: { color: '#E3E8EF' }, ticks: { font: { size: 11 }, color: '#8A96A3', stepSize: 1 } }
+      }
+    }
+  });
+}
+
+// ── CHART: ITEMS ──
+function renderChartItems() {
+  const map = {};
+  allOrders.forEach(o => {
+    const items = (o.item||'').split(' | ');
+    items.forEach(it => { const n=it.replace(/\s*x\d+/,'').trim(); if(n) map[n]=(map[n]||0)+1; });
+  });
+  document.getElementById('body-chart-items').innerHTML = '<div class="chart-wrap"><canvas id="canvas-items"></canvas></div>';
+  const ctx = document.getElementById('canvas-items').getContext('2d');
+  charts.items = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(map),
+      datasets: [{ label: 'Qty', data: Object.values(map), backgroundColor: ['#0176D3','#2E844A','#DD5A0A','#6B4FBB','#C23934'], borderRadius: 6, borderSkipped: false }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#E3E8EF' }, ticks: { font: { size: 11 }, color: '#8A96A3' } },
+        y: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#8A96A3' } }
+      }
+    }
+  });
+}
+
+// ── RECENT ORDERS ──
+function renderRecentOrders() {
+  const recent = [...allOrders].reverse().slice(0, 15);
+  const paymentBadge = { GCash: 'badge-blue', Cash: 'badge-green', 'Sa Sahod na Boss Oma': 'badge-orange' };
+  let rows = '';
+  recent.forEach(o => {
+    const date = o.timestamp ? new Date(o.timestamp).toLocaleDateString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+    const badge = paymentBadge[o.payment] || 'badge-purple';
+    const isPayLater = o.payment === "Sa Sahod na Boss Oma";
+    const isPaid = o.paid === true;
+    const orderNum = (o.ordernumber || o.orderNumber || '').replace(/'/g, "\\'");
+
+    let paymentCell = `<span class="badge ${badge}">${o.payment || '—'}</span>`;
+    if (isPayLater) {
+      if (isPaid) {
+        paymentCell += `
+          <span class="paid-tile" onclick="togglePaid('${orderNum}', false)" title="Click to mark unpaid">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Paid
+          </span>`;
+      } else {
+        paymentCell += `
+          <button class="btn-mark-paid" onclick="togglePaid('${orderNum}', true)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Mark as Paid
+          </button>`;
+      }
+    }
+
+    rows += `<tr>
+  <td>${o.name || '—'}</td>
+  <td>${o.office || '—'}</td>
+  <td>${o.item || '—'}</td>
+  <td>₱${parseFloat(o.total||0).toFixed(2)}</td>
+  <td>${paymentCell}</td>
+  <td>${date}</td>
+</tr>`;
+  });
+  document.getElementById('body-recent-orders').innerHTML = rows
+    ? `<div style="overflow-x:auto"><table class="data-table">
+<thead><tr>
+  <th>Name</th><th>Office</th><th>Item</th><th>Total</th><th>Payment</th><th>Date</th>
+</tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>`
+    : '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No orders yet</div></div>';
+}
+
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── RESPONSIVE ──
+window.addEventListener('resize', () => {
+  document.getElementById('menu-btn').style.display = window.innerWidth <= 900 ? 'flex' : 'none';
+});
+</script>
+</body>
+</html>
